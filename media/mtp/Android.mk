@@ -38,6 +38,9 @@ LOCAL_SRC_FILES:=                                       \
 LOCAL_MODULE:= libmtp
 
 LOCAL_CFLAGS := -DMTP_DEVICE -DMTP_HOST
+ifneq ($(filter tulip,$(TARGET_BOARD_PLATFORM)),)
+LOCAL_CFLAGS += -DCHIP_1689
+endif
 
 LOCAL_SHARED_LIBRARIES := libutils libcutils liblog libusbhost libbinder
 

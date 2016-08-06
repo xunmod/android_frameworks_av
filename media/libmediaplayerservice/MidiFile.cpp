@@ -522,6 +522,8 @@ int MidiFile::render() {
             switch(mState) {
             case EAS_STATE_STOPPED:
             {
+				int start_pos = 0;
+				seekTo(start_pos);
                 ALOGV("MidiFile::render - stopped");
                 sendEvent(MEDIA_PLAYBACK_COMPLETE);
                 break;

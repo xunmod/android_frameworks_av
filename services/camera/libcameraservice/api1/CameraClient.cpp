@@ -280,6 +280,8 @@ status_t CameraClient::setPreviewWindow(const sp<IBinder>& binder,
     status_t result = checkPidAndHardware();
     if (result != NO_ERROR) return result;
 
+	bool mPreviewEnable; 
+
     // return if no change in surface.
     if (binder == mSurface) {
         return NO_ERROR;
@@ -295,7 +297,12 @@ status_t CameraClient::setPreviewWindow(const sp<IBinder>& binder,
     }
 
     // If preview has been already started, register preview buffers now.
+	mPreviewEnable = false;
     if (mHardware->previewEnabled()) {
+		mPreviewEnable = true;
+		mHardware->disablePreview();
+		
+		
         if (window != 0) {
             native_window_set_scaling_mode(window.get(),
                     NATIVE_WINDOW_SCALING_MODE_SCALE_TO_WINDOW);
@@ -315,6 +322,9 @@ status_t CameraClient::setPreviewWindow(const sp<IBinder>& binder,
         // disconnect here.
         disconnectWindow(window);
     }
+
+    if(mPreviewEnable)
+	    mHardware->enablePreview();
 
     return result;
 }

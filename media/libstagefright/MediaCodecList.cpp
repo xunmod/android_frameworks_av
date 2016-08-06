@@ -41,14 +41,24 @@ static Mutex sInitMutex;
 
 static MediaCodecList *gCodecList = NULL;
 
+char m_CallingProcess[256];
+bool mCtsFlag = false;
+extern void getCallingProcessName(char *name);
+
+
 // static
 sp<IMediaCodecList> MediaCodecList::sCodecList;
 
 // static
 sp<IMediaCodecList> MediaCodecList::getLocalInstance() {
     Mutex::Autolock autoLock(sInitMutex);
-
-    if (gCodecList == NULL) {
+	#ifdef SUN50IW1P1     //for a64 cts use google hevc decoder
+	getCallingProcessName(m_CallingProcess);
+	if((strcmp(m_CallingProcess, "com.android.cts.media") == 0)){
+		mCtsFlag = true;
+	}
+	#endif
+    if (gCodecList == NULL || mCtsFlag) {
         gCodecList = new MediaCodecList;
         if (gCodecList->initCheck() == OK) {
             sCodecList = gCodecList;
@@ -95,7 +105,11 @@ sp<IMediaCodecList> MediaCodecList::getInstance() {
 
 MediaCodecList::MediaCodecList()
     : mInitCheck(NO_INIT) {
-    parseTopLevelXMLFile("/etc/media_codecs.xml");
+    if(mCtsFlag){
+		parseTopLevelXMLFile("/etc/cts_media_codecs.xml");
+	}else{
+		parseTopLevelXMLFile("/etc/media_codecs.xml");
+	}
 }
 
 void MediaCodecList::parseTopLevelXMLFile(const char *codecs_xml) {

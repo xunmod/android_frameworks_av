@@ -23,6 +23,9 @@ LOCAL_SRC_FILES:=               \
     StagefrightRecorder.cpp     \
     TestPlayerStub.cpp          \
     VideoFrameScheduler.cpp     \
+    SimpleMediaFormatProbe.cpp	\
+    MovAvInfoDetect.cpp         \
+    MkvCodecInfoDetect.cpp      
 
 LOCAL_SHARED_LIBRARIES :=       \
     libbinder                   \
@@ -42,10 +45,15 @@ LOCAL_SHARED_LIBRARIES :=       \
     libstagefright_wfd          \
     libutils                    \
     libvorbisidec               \
+    libui                       \
+    libawplayer             \
+    libawmetadataretriever  \
+    libthumbnailplayer          
 
 LOCAL_STATIC_LIBRARIES :=       \
     libstagefright_nuplayer     \
     libstagefright_rtsp         \
+    libstagefright_matroska
 
 LOCAL_C_INCLUDES :=                                                 \
     $(TOP)/frameworks/av/media/libstagefright/include               \
@@ -54,6 +62,20 @@ LOCAL_C_INCLUDES :=                                                 \
     $(TOP)/frameworks/av/media/libstagefright/webm                  \
     $(TOP)/frameworks/native/include/media/openmax                  \
     $(TOP)/external/tremolo/Tremolo                                 \
+    $(TOP)/external/libvpx/libwebm 				    \
+    $(TOP)/frameworks/av/media/libstagefright/matroska		    \
+    $(TOP)/frameworks/av/media/liballwinner/awplayer/                       \
+    $(TOP)/frameworks/av/media/liballwinner/awmetadataretriever/            \
+    $(TOP)/frameworks/av/media/liballwinner/LIBRARY/CODEC/VIDEO/DECODER/include    \
+    $(TOP)/frameworks/av/media/liballwinner/LIBRARY/CODEC/AUDIO/DECODER/include    \
+    $(TOP)/frameworks/av/media/liballwinner/LIBRARY/CODEC/SUBTITLE/DECODER/include \
+    $(TOP)/frameworks/av/media/liballwinner/LIBRARY/PLAYER/include                 \
+    $(TOP)/frameworks/av/media/liballwinner/LIBRARY/DEMUX/PARSER/include/   \
+    $(TOP)/frameworks/av/media/liballwinner/LIBRARY/DEMUX/STREAM/include/   \
+    $(TOP)/frameworks/av/media/liballwinner/LIBRARY/DEMUX/BASE/include/     \
+    $(TOP)/frameworks/av/media/liballwinner/LIBRARY/                        \
+    $(TOP)/frameworks/av/media/liballwinner/thumbnailplayer
+	
 
 LOCAL_MODULE:= libmediaplayerservice
 

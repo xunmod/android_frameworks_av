@@ -20,6 +20,7 @@
 #include <utils/RefBase.h>
 #include <binder/IInterface.h>
 #include <binder/Parcel.h>
+#include "mediaplayerinfo.h"
 #include <utils/KeyedVector.h>
 #include <system/audio.h>
 
@@ -100,6 +101,30 @@ public:
     virtual status_t        getMetadata(bool update_only,
                                         bool apply_filter,
                                         Parcel *metadata) = 0;
+    /* add by Gary. start {{----------------------------------- */
+    virtual status_t        setSubCharset(const char *charset) = 0;
+    virtual status_t        getSubCharset(char *charset) = 0;
+    virtual status_t        setSubDelay(int time) = 0;
+    virtual int             getSubDelay() = 0;
+    /* add by Gary. end   -----------------------------------}} */
+    /* add by Gary. start {{----------------------------------- */
+    /* 2011-11-14 */
+    //* support scale mode 
+    virtual status_t        enableScaleMode(bool enable, int width, int height) = 0;
+    /* add by Gary. end   -----------------------------------}} */
+
+    /* add by Gary. start {{----------------------------------- */
+    /* 2012-03-07 */
+    /* set audio channel mute */
+    virtual status_t        setChannelMuteMode(int muteMode) = 0;
+    virtual int             getChannelMuteMode() = 0;
+    /* add by Gary. end   -----------------------------------}} */
+
+    /* add by Gary. start {{----------------------------------- */
+    /* 2012-4-24 */
+    /* add two general interfaces for expansibility */
+    virtual status_t        generalInterface(int cmd, int int1, int int2, int int3, void *p) = 0;
+    /* add by Gary. end   -----------------------------------}} */
 };
 
 // ----------------------------------------------------------------------------

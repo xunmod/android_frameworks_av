@@ -80,7 +80,8 @@ enum {
     RELEASE_AUDIO_PATCH,
     LIST_AUDIO_PATCHES,
     SET_AUDIO_PORT_CONFIG,
-    GET_AUDIO_HW_SYNC
+    GET_AUDIO_HW_SYNC,
+	SET_STREAM_MUTE_NO_PERMISSION
 };
 
 class BpAudioFlinger : public BpInterface<IAudioFlinger>
@@ -347,6 +348,16 @@ public:
         data.writeInt32((int32_t) stream);
         data.writeInt32(muted);
         remote()->transact(SET_STREAM_MUTE, data, &reply);
+        return reply.readInt32();
+    }
+
+    virtual status_t setStreamMuteNoPermission(audio_stream_type_t stream, bool muted)
+    {
+        Parcel data, reply;
+        data.writeInterfaceToken(IAudioFlinger::getInterfaceDescriptor());
+        data.writeInt32((int32_t) stream);
+        data.writeInt32(muted);
+        remote()->transact(SET_STREAM_MUTE_NO_PERMISSION, data, &reply);
         return reply.readInt32();
     }
 
@@ -1023,6 +1034,12 @@ status_t BnAudioFlinger::onTransact(
             CHECK_INTERFACE(IAudioFlinger, data, reply);
             int stream = data.readInt32();
             reply->writeInt32( setStreamMute((audio_stream_type_t) stream, data.readInt32()) );
+            return NO_ERROR;
+        } break;
+        case SET_STREAM_MUTE_NO_PERMISSION: {
+            CHECK_INTERFACE(IAudioFlinger, data, reply);
+            int stream = data.readInt32();
+            reply->writeInt32( setStreamMuteNoPermission((audio_stream_type_t) stream, data.readInt32()) );
             return NO_ERROR;
         } break;
         case STREAM_VOLUME: {

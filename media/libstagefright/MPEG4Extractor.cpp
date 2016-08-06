@@ -925,7 +925,8 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
                         while (cur && cur->next != mLastTrack) {
                             cur = cur->next;
                         }
-                        cur->next = NULL;
+                        if(cur != NULL)
+							cur->next = NULL;
                         delete mLastTrack;
                         mLastTrack = cur;
                     }
@@ -3285,6 +3286,8 @@ status_t MPEG4Source::parseSampleAuxiliaryInformationSizes(
     }
     if (smplcnt > mCurrentSampleInfoAllocSize) {
         mCurrentSampleInfoSizes = (uint8_t*) realloc(mCurrentSampleInfoSizes, smplcnt);
+		if(!mCurrentSampleInfoSizes)
+			free(mCurrentSampleInfoSizes);
         mCurrentSampleInfoAllocSize = smplcnt;
     }
 
@@ -3316,6 +3319,8 @@ status_t MPEG4Source::parseSampleAuxiliaryInformationOffsets(
 
     if (entrycount > mCurrentSampleInfoOffsetsAllocSize) {
         mCurrentSampleInfoOffsets = (uint64_t*) realloc(mCurrentSampleInfoOffsets, entrycount * 8);
+		if(!mCurrentSampleInfoOffsets)
+			free(mCurrentSampleInfoOffsets);
         mCurrentSampleInfoOffsetsAllocSize = entrycount;
     }
     mCurrentSampleInfoOffsetCount = entrycount;

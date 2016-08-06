@@ -233,6 +233,28 @@ public:
         return false;
     }
 
+	/**
+     * Enable preview mode.
+     */
+    status_t enablePreview()
+    {
+        ALOGV("%s(%s)", __FUNCTION__, mName.string());
+        if (mDevice->ops->enable_preview)
+            return mDevice->ops->enable_preview(mDevice);
+        return INVALID_OPERATION;
+    }
+
+	/**
+     * Disable preview mode.
+     */
+    status_t disablePreview()
+    {
+        ALOGV("%s(%s)", __FUNCTION__, mName.string());
+        if (mDevice->ops->disable_preview)
+            return mDevice->ops->disable_preview(mDevice);
+        return INVALID_OPERATION;
+    }
+
     /**
      * Request the camera hal to store meta data or real YUV data in
      * the video buffers send out via CAMERA_MSG_VIDEO_FRRAME for a

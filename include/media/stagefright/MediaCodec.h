@@ -33,6 +33,7 @@ struct ICrypto;
 struct IBatteryStats;
 struct SoftwareRenderer;
 struct Surface;
+struct HDMIListerner;
 
 struct MediaCodec : public AHandler {
     enum ConfigureFlags {
@@ -133,6 +134,8 @@ struct MediaCodec : public AHandler {
     status_t getInputBuffer(size_t index, sp<ABuffer> *buffer);
 
     status_t requestIDRFrame();
+
+    status_t setEncoderBitrate(int32_t bitrate);
 
     // Notification will be posted once there "is something to do", i.e.
     // an input/output buffer has become available, a format change is
@@ -261,6 +264,13 @@ private:
     sp<AMessage> mActivityNotify;
 
     bool mHaveInputSurface;
+    //add by weihongqiang
+    bool mIsAudioTrack;
+    bool mIsDRMMedia;
+    bool mHDMIPlugged;
+	bool mMuteDRMWhenHDMI;
+    HDMIListerner * mHDMIListener;
+    //end.
 
     MediaCodec(const sp<ALooper> &looper);
 
@@ -303,6 +313,10 @@ private:
     status_t onSetParameters(const sp<AMessage> &params);
 
     status_t amendOutputFormatWithCodecSpecificData(const sp<ABuffer> &buffer);
+    //add by weihongqiang
+    void 	 setHDMIState(bool state);
+    static void HDMINotify(void* cookie, bool state);
+    //end
     void updateBatteryStat();
     bool isExecuting() const;
 

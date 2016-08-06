@@ -1821,11 +1821,22 @@ status_t OMXCodec::allocateOutputBuffersFromNativeWindow() {
         return err;
     }
 
-    err = native_window_set_buffers_geometry(
+    if(def.format.video.eColorFormat == OMX_COLOR_FormatYUV420Planar)
+    {        
+        err = native_window_set_buffers_geometry(
+            mNativeWindow.get(),                
+            def.format.video.nFrameWidth,                
+            def.format.video.nFrameHeight,                
+            HAL_PIXEL_FORMAT_YV12); //need format conversion
+    }    
+    else    
+    {        
+        err = native_window_set_buffers_geometry(                
             mNativeWindow.get(),
             def.format.video.nFrameWidth,
             def.format.video.nFrameHeight,
             def.format.video.eColorFormat);
+    }
 
     if (err != 0) {
         ALOGE("native_window_set_buffers_geometry failed: %s (%d)",
@@ -1867,6 +1878,26 @@ status_t OMXCodec::allocateOutputBuffersFromNativeWindow() {
             ALOGE("native window could not be authenticated");
             return PERMISSION_DENIED;
         }
+    }
+
+
+    //* vp9,vp6,wmv1,wmv2,hevc are the software decoder, 
+    //* we should set private usage to nativeWindow.
+    if(!strcmp(mComponentName, "OMX.allwinner.video.decoder.vp9")
+       || !strcmp(mComponentName, "OMX.allwinner.video.decoder.vp6")
+       || !strcmp(mComponentName, "OMX.allwinner.video.decoder.wmv1")
+       || !strcmp(mComponentName, "OMX.allwinner.video.decoder.wmv2"))
+    {
+        ALOGD("***it is software decoder, set usage of GRALLOC_USAGE_PRIVATE_3, name = %s ",
+              mComponentName);
+        //* gpu use this usage to malloc buffer with cache.
+        usage |= GRALLOC_USAGE_SW_WRITE_OFTEN;
+    }
+    else if(!strncmp(mComponentName, "OMX.allwinner.video.decoder", 27))
+    {
+        ALOGD("***set GRALLOC_USAGE_HW_2D");
+        //* gpu use this usage to malloc continuous physical buffer.
+        usage |= GRALLOC_USAGE_HW_2D;
     }
 
     ALOGV("native_window_set_usage usage=0x%lx", usage);
@@ -2130,7 +2161,8 @@ status_t OMXCodec::pushBlankBuffersToNativeWindow() {
             goto error;
         }
 
-        *img = 0;
+		if(img != NULL)
+       		*img = 0;
 
         err = buf->unlock();
         if (err != NO_ERROR) {

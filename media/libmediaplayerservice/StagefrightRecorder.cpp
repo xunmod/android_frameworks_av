@@ -1477,17 +1477,27 @@ status_t StagefrightRecorder::setupVideoEncoder(
         sp<MetaData> meta = cameraSource->getFormat();
 
         int32_t width, height, stride, sliceHeight, colorFormat;
+	    int32_t src_width, src_height;
         CHECK(meta->findInt32(kKeyWidth, &width));
         CHECK(meta->findInt32(kKeyHeight, &height));
         CHECK(meta->findInt32(kKeyStride, &stride));
         CHECK(meta->findInt32(kKeySliceHeight, &sliceHeight));
         CHECK(meta->findInt32(kKeyColorFormat, &colorFormat));
+		
+		CHECK(meta->findInt32(kKeySrcWidth, &src_width));
+        CHECK(meta->findInt32(kKeySrcHeight, &src_height));
 
         format->setInt32("width", width);
         format->setInt32("height", height);
         format->setInt32("stride", stride);
         format->setInt32("slice-height", sliceHeight);
         format->setInt32("color-format", colorFormat);
+	    
+		format->setInt32("src-width", src_width);
+        format->setInt32("src-height", src_height);
+		
+		ALOGD("src-width,  W: %d, H: %d", src_width, src_height);
+		
     } else {
         format->setInt32("width", mVideoWidth);
         format->setInt32("height", mVideoHeight);

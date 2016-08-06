@@ -607,6 +607,20 @@ void RTPSender::onNetNotify(bool isRTP, const sp<AMessage> &msg) {
             break;
         }
 
+	case ANetworkSession::kWhatBitrateChange:
+        {
+            int32_t sessionID;
+            int32_t encoderBitrate;
+            CHECK(msg->findInt32("sessionID", &sessionID));
+            CHECK(msg->findInt32("encoderBitrate", &encoderBitrate));
+
+            sp<AMessage> notify = mNotify->dup();
+            notify->setInt32("what", kWhatBitrateChange);
+            notify->setInt32("encoderBitrate", encoderBitrate);
+            notify->post();
+            break;
+        }
+
         default:
             TRESPASS();
     }
@@ -685,8 +699,9 @@ status_t RTPSender::onRTCPData(const sp<ABuffer> &buffer) {
     return OK;
 }
 
-status_t RTPSender::parseReceiverReport(
-        const uint8_t *data, size_t /* size */) {
+status_t RTPSender::parseReceiverReport(const uint8_t *data, size_t size) {
+    // hexdump(data, size);
+
     float fractionLost = data[12] / 256.0f;
 
     ALOGI("lost %.2f %% of packets during report interval.",

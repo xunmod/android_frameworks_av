@@ -64,7 +64,10 @@ WifiDisplaySource::WifiDisplaySource(
       mHDCPPort(0),
       mHDCPInitializationComplete(false),
       mSetupTriggerDeferred(false),
-      mPlaybackSessionEstablished(false) {
+	mPlaybackSessionEstablished(false),
+	mSinkSupportsVideo(false),
+	mChosenVideoResolutionIndex(0),
+	mSinkSupportsAudio(false){
     if (path != NULL) {
         mMediaPath.setTo(path);
     }
@@ -434,6 +437,12 @@ void WifiDisplaySource::onMessageReceived(const sp<AMessage> &msg) {
 
                 finishPlay();
 
+                if (0 != property_set("persist.service.wfd.enable", "1")) {
+                    ALOGE("DisplayConnected set persist.service.wfd.enable property fail.");
+                }
+                
+                ALOGI("DisplayConnected set persist.service.wfd.enable property to 1.");
+
                 if (mState == ABOUT_TO_PLAY) {
                     mState = PLAYING;
                 }
@@ -585,7 +594,9 @@ status_t WifiDisplaySource::sendM1(int32_t sessionID) {
 
 status_t WifiDisplaySource::sendM3(int32_t sessionID) {
     AString body =
-        "wfd_content_protection\r\n"
+        //content protection is optional(not mandatory), host do not support HDCP.
+        //sink device which support HDCP will need content protection negotiate.
+        //"wfd_content_protection\r\n"
         "wfd_video_formats\r\n"
         "wfd_audio_codecs\r\n"
         "wfd_client_rtp_ports\r\n";
@@ -1659,6 +1670,11 @@ void WifiDisplaySource::disconnectClient2() {
 
     mClient->onDisplayDisconnected();
 
+    if (0 != property_set("persist.service.wfd.enable", "0")) {
+        ALOGE("DisplayDisconnected set persist.service.wfd.enable property fail.");
+    }
+    ALOGD("DisplayDisconnected set persist.service.wfd.enable property to 0.");
+
     finishStopAfterDisconnectingClient();
 }
 
@@ -1696,9 +1712,9 @@ status_t WifiDisplaySource::makeHDCP() {
         interface_cast<IMediaPlayerService>(binder);
 
     CHECK(service != NULL);
-
+    
     mHDCP = service->makeHDCP(true /* createEncryptionModule */);
-
+  
     if (mHDCP == NULL) {
         return ERROR_UNSUPPORTED;
     }
@@ -1713,7 +1729,7 @@ status_t WifiDisplaySource::makeHDCP() {
 
         mHDCPObserver.clear();
         mHDCP.clear();
-
+       
         return err;
     }
 
@@ -1721,7 +1737,7 @@ status_t WifiDisplaySource::makeHDCP() {
             mClientInfo.mRemoteIP.c_str(), mHDCPPort);
 
     err = mHDCP->initAsync(mClientInfo.mRemoteIP.c_str(), mHDCPPort);
-
+ 
     if (err != OK) {
         return err;
     }

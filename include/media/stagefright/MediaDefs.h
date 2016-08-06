@@ -21,6 +21,7 @@
 namespace android {
 
 extern const char *MEDIA_MIMETYPE_IMAGE_JPEG;
+extern const char *MEDIA_MIMETYPE_VIDEO_VPX;
 
 extern const char *MEDIA_MIMETYPE_VIDEO_VP8;
 extern const char *MEDIA_MIMETYPE_VIDEO_VP9;
@@ -30,6 +31,23 @@ extern const char *MEDIA_MIMETYPE_VIDEO_MPEG4;
 extern const char *MEDIA_MIMETYPE_VIDEO_H263;
 extern const char *MEDIA_MIMETYPE_VIDEO_MPEG2;
 extern const char *MEDIA_MIMETYPE_VIDEO_RAW;
+
+// extend define mine type for other APKs, such as XBMC
+extern const char *MEDIA_MIMETYPE_VIDEO_WMV1;
+extern const char *MEDIA_MIMETYPE_VIDEO_WMV2;
+extern const char *MEDIA_MIMETYPE_VIDEO_VC1;
+extern const char *MEDIA_MIMETYPE_VIDEO_VP6;
+extern const char *MEDIA_MIMETYPE_VIDEO_S263;
+extern const char *MEDIA_MIMETYPE_VIDEO_MJPEG;
+extern const char *MEDIA_MIMETYPE_VIDEO_MPEG1;
+
+// aw extend
+
+extern const char *MEDIA_MIMETYPE_VIDEO_MSMPEG4V1;
+extern const char *MEDIA_MIMETYPE_VIDEO_MSMPEG4V2;
+extern const char *MEDIA_MIMETYPE_VIDEO_DIVX;
+extern const char *MEDIA_MIMETYPE_VIDEO_XVID;
+extern const char *MEDIA_MIMETYPE_VIDEO_RXG2;
 
 extern const char *MEDIA_MIMETYPE_AUDIO_AMR_NB;
 extern const char *MEDIA_MIMETYPE_AUDIO_AMR_WB;

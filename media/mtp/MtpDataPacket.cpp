@@ -25,8 +25,11 @@
 #include "MtpDataPacket.h"
 #include "MtpStringBuffer.h"
 
+#ifdef CHIP_1689
+#define MTP_BUFFER_SIZE 1024
+#else
 #define MTP_BUFFER_SIZE 16384
-
+#endif
 namespace android {
 
 MtpDataPacket::MtpDataPacket()

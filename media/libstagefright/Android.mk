@@ -60,9 +60,11 @@ LOCAL_SRC_FILES:=                         \
         WVMExtractor.cpp                  \
         XINGSeeker.cpp                    \
         avc_utils.cpp                     \
+	HDMIListerner.cpp
 
 LOCAL_C_INCLUDES:= \
         $(TOP)/frameworks/av/include/media/ \
+	$(TOP)/frameworks/av/media/libstagefright/include	\
         $(TOP)/frameworks/av/include/media/stagefright/timedtext \
         $(TOP)/frameworks/native/include/media/hardware \
         $(TOP)/frameworks/native/include/media/openmax \
@@ -117,6 +119,10 @@ LOCAL_SHARED_LIBRARIES += \
         libstagefright_avc_common \
         libstagefright_foundation \
         libdl
+
+ifeq ($(TARGET_BOARD_PLATFORM), tulip)
+LOCAL_CFLAGS   += -DSUN50IW1P1
+endif
 
 LOCAL_CFLAGS += -Wno-multichar
 

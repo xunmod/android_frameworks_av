@@ -381,6 +381,12 @@ status_t MediaCodecSource::initEncoder() {
 
     if (mFlags & FLAG_USE_METADATA_INPUT) {
         mOutputFormat->setInt32("store-metadata-in-buffers", 1);
+
+		// add by fangning for configure input buffer number
+		mOutputFormat->setInt32("input-buffer-numbers", 3);
+
+		// add by fangning for using little memory
+		mOutputFormat->setInt32("input-buffer-size", 1024);
     }
 
     if (mFlags & FLAG_USE_SURFACE_INPUT) {

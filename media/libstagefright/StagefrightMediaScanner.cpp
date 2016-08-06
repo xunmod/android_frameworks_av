@@ -37,24 +37,45 @@ StagefrightMediaScanner::StagefrightMediaScanner() {}
 
 StagefrightMediaScanner::~StagefrightMediaScanner() {}
 
-static bool FileHasAcceptableExtension(const char *extension) {
+static int FileHasAcceptableExtension(const char *extension) {
+
+	
     static const char *kValidExtensions[] = {
         ".mp3", ".mp4", ".m4a", ".3gp", ".3gpp", ".3g2", ".3gpp2",
         ".mpeg", ".ogg", ".mid", ".smf", ".imy", ".wma", ".aac",
         ".wav", ".amr", ".midi", ".xmf", ".rtttl", ".rtx", ".ota",
-        ".mkv", ".mka", ".webm", ".ts", ".fl", ".flac", ".mxmf",
-        ".avi", ".mpeg", ".mpg", ".awb", ".mpga"
+        ".mka", ".fl", ".flac", ".mxmf",
+        ".mpeg", ".mpg"
     };
-    static const size_t kNumValidExtensions =
+    static const char *kValidExtensionsAW[] = {
+       ".mkv", ".rmvb", ".rm", ".mov", ".flv", ".f4v", ".avi",
+       ".mp1", ".mp2", ".awb", ".oga", ".ape", ".ac3",
+       ".dts", ".omg", ".oma", ".midi", ".m4v", ".wmv", ".asf",
+       ".vob", ".pmp", ".m4r", ".ra", ".webm",
+       ".ts",".m2ts"
+    };
+
+    size_t kNumValidExtensions;
+    
+    kNumValidExtensions =
         sizeof(kValidExtensions) / sizeof(kValidExtensions[0]);
 
     for (size_t i = 0; i < kNumValidExtensions; ++i) {
         if (!strcasecmp(extension, kValidExtensions[i])) {
-            return true;
+            return 1;
         }
     }
 
-    return false;
+    kNumValidExtensions =
+            sizeof(kValidExtensionsAW) / sizeof(kValidExtensionsAW[0]);
+
+    for (size_t i = 0; i < kNumValidExtensions; ++i) {
+		if (!strcasecmp(extension, kValidExtensionsAW[i])) {
+			return 2;
+		}
+	}
+
+    return 0;
 }
 
 static MediaScanResult HandleMIDI(

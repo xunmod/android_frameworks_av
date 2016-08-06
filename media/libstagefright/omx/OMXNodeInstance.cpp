@@ -102,6 +102,7 @@ namespace android {
 struct BufferMeta {
     BufferMeta(const sp<IMemory> &mem, bool is_backup = false)
         : mMem(mem),
+        mSize(0),
           mIsBackup(is_backup) {
     }
 
@@ -112,6 +113,7 @@ struct BufferMeta {
 
     BufferMeta(const sp<GraphicBuffer> &graphicBuffer)
         : mGraphicBuffer(graphicBuffer),
+        mSize(0),
           mIsBackup(false) {
     }
 

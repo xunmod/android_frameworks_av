@@ -481,6 +481,31 @@ void ACodec::signalEndOfInputStream() {
     (new AMessage(kWhatSignalEndOfInputStream, id()))->post();
 }
 
+status_t ACodec::setEncoderBitrate(int32_t bitrate) {
+    OMX_VIDEO_CONTROLRATETYPE bitrateMode = OMX_Video_ControlRateVariable;
+    OMX_VIDEO_PARAM_BITRATETYPE bitrateType;
+    InitOMXParams(&bitrateType);
+    bitrateType.nPortIndex = kPortIndexOutput;
+
+    if(mOMX == NULL)
+        return NO_INIT;
+
+    status_t err = mOMX->getParameter(
+            mNode, OMX_IndexParamVideoBitrate,
+            &bitrateType, sizeof(bitrateType));
+
+    if (err != OK) {
+        return err;
+    }
+
+    bitrateType.eControlRate = bitrateMode;
+    bitrateType.nTargetBitrate = bitrate;
+
+    return mOMX->setParameter(
+            mNode, OMX_IndexParamVideoBitrate,
+            &bitrateType, sizeof(bitrateType));
+}
+
 void ACodec::initiateStart() {
     (new AMessage(kWhatStart, id()))->post();
 }
@@ -628,11 +653,23 @@ status_t ACodec::configureOutputBuffersFromNativeWindow(
         return err;
     }
 
-    err = native_window_set_buffers_geometry(
-            mNativeWindow.get(),
-            def.format.video.nFrameWidth,
-            def.format.video.nFrameHeight,
-            def.format.video.eColorFormat);
+    if(def.format.video.eColorFormat == OMX_COLOR_FormatYUV420Planar)
+    {        
+        err = native_window_set_buffers_geometry(
+            mNativeWindow.get(),                
+            def.format.video.nFrameWidth,                
+            def.format.video.nFrameHeight,                
+            HAL_PIXEL_FORMAT_YV12); //need format conversion
+    }    
+    else    
+    {        
+        err = native_window_set_buffers_geometry(                
+            mNativeWindow.get(),                
+            def.format.video.nFrameWidth,                
+            def.format.video.nFrameHeight,                
+            def.format.video.eColorFormat);    
+    }
+
 
     if (err != 0) {
         ALOGE("native_window_set_buffers_geometry failed: %s (%d)",
@@ -671,7 +708,8 @@ status_t ACodec::configureOutputBuffersFromNativeWindow(
     }
     int omxUsage = usage;
 
-    if (mFlags & kFlagIsGrallocUsageProtected) {
+    if (mFlags & (kFlagIsGrallocUsageProtected | kFlagIsDRM)) {
+        ALOGD("---native protected video");
         usage |= GRALLOC_USAGE_PROTECTED;
     }
 
@@ -692,6 +730,24 @@ status_t ACodec::configureOutputBuffersFromNativeWindow(
             ALOGE("native window could not be authenticated");
             return PERMISSION_DENIED;
         }
+    }
+
+    //* vp9,vp6,wmv1,wmv2,hevc are the software decoder, 
+    //* we should set private usage to nativeWindow.
+    if(!strcmp(mComponentName.c_str(), "OMX.allwinner.video.decoder.vp9")
+       || !strcmp(mComponentName.c_str(), "OMX.allwinner.video.decoder.vp6")
+       || !strcmp(mComponentName.c_str(), "OMX.allwinner.video.decoder.wmv1")
+       || !strcmp(mComponentName.c_str(), "OMX.allwinner.video.decoder.wmv2"))
+    {
+        ALOGD("***it is software decoder, set usage of GRALLOC_USAGE_PRIVATE_3, name = %s ",
+              mComponentName.c_str());
+        //* gpu use this usage to malloc buffer with cache.
+        usage |= GRALLOC_USAGE_SW_WRITE_OFTEN;
+    }
+    else if(!strncmp(mComponentName.c_str(), "OMX.allwinner.video.decoder", 27))
+    {
+        //* gpu use this usage to malloc continuous physical buffer.
+        usage |= GRALLOC_USAGE_HW_2D;
     }
 
     int consumerUsage = 0;
@@ -1115,12 +1171,38 @@ status_t ACodec::setComponentRole(
             "audio_decoder.flac", "audio_encoder.flac" },
         { MEDIA_MIMETYPE_AUDIO_MSGSM,
             "audio_decoder.gsm", "audio_encoder.gsm" },
+        // extend define
+        { MEDIA_MIMETYPE_VIDEO_WMV1,
+            "video_decoder.wmv1", "video_encoder.wmv1" },
+        { MEDIA_MIMETYPE_VIDEO_WMV2,
+            "video_decoder.wmv2", "video_encoder.wmv2" },
+        { MEDIA_MIMETYPE_VIDEO_VC1,
+            "video_decoder.vc1", "video_encoder.vc1" },
+        { MEDIA_MIMETYPE_VIDEO_VP6,
+            "video_decoder.vp6", "video_encoder.vp6" },
+        { MEDIA_MIMETYPE_VIDEO_S263,
+            "video_decoder.s263", "video_encoder.s263" },
+        { MEDIA_MIMETYPE_VIDEO_MJPEG,
+            "video_decoder.mjpeg", "video_encoder.mjpeg" },
+        { MEDIA_MIMETYPE_VIDEO_MPEG1,
+            "video_decoder.mpeg1", "video_encoder.mpeg1" },
         { MEDIA_MIMETYPE_VIDEO_MPEG2,
             "video_decoder.mpeg2", "video_encoder.mpeg2" },
         { MEDIA_MIMETYPE_AUDIO_AC3,
             "audio_decoder.ac3", "audio_encoder.ac3" },
         { MEDIA_MIMETYPE_AUDIO_EAC3,
             "audio_decoder.eac3", "audio_encoder.eac3" },
+        //aw extend
+        { MEDIA_MIMETYPE_VIDEO_MSMPEG4V1,
+            "video_decoder.msmpeg4v1", "video_encoder.msmpeg4v1" },
+        { MEDIA_MIMETYPE_VIDEO_MSMPEG4V2,
+            "video_decoder.msmpeg4v2", "video_encoder.msmpeg4v2" },
+        { MEDIA_MIMETYPE_VIDEO_DIVX,
+            "video_decoder.divx", "video_encoder.divx" },
+        { MEDIA_MIMETYPE_VIDEO_XVID,
+            "video_decoder.xvid", "video_encoder.xvid" },
+        { MEDIA_MIMETYPE_VIDEO_RXG2,
+            "video_decoder.rxg2", "video_encoder.rxg2" },
     };
 
     static const size_t kNumMimeToRole =
@@ -2292,6 +2374,20 @@ static const struct VideoCodingMapEntry {
     { MEDIA_MIMETYPE_VIDEO_MPEG2, OMX_VIDEO_CodingMPEG2 },
     { MEDIA_MIMETYPE_VIDEO_VP8, OMX_VIDEO_CodingVP8 },
     { MEDIA_MIMETYPE_VIDEO_VP9, OMX_VIDEO_CodingVP9 },
+	// extend
+    { MEDIA_MIMETYPE_VIDEO_WMV1, OMX_VIDEO_CodingWMV1},
+    { MEDIA_MIMETYPE_VIDEO_WMV2, OMX_VIDEO_CodingWMV2},
+    { MEDIA_MIMETYPE_VIDEO_VC1, OMX_VIDEO_CodingWMV},
+    { MEDIA_MIMETYPE_VIDEO_VP6, OMX_VIDEO_CodingVP6},
+    { MEDIA_MIMETYPE_VIDEO_S263, OMX_VIDEO_CodingS263},
+    { MEDIA_MIMETYPE_VIDEO_MJPEG, OMX_VIDEO_CodingMJPEG},
+    { MEDIA_MIMETYPE_VIDEO_MPEG1, OMX_VIDEO_CodingMPEG1},
+	// aw extend
+	{ MEDIA_MIMETYPE_VIDEO_MSMPEG4V1, OMX_VIDEO_CodingMSMPEG4V1},
+    { MEDIA_MIMETYPE_VIDEO_MSMPEG4V2, OMX_VIDEO_CodingMSMPEG4V2},
+    { MEDIA_MIMETYPE_VIDEO_DIVX, OMX_VIDEO_CodingDIVX},
+    { MEDIA_MIMETYPE_VIDEO_XVID, OMX_VIDEO_CodingXVID},
+    { MEDIA_MIMETYPE_VIDEO_RXG2, OMX_VIDEO_CodingRXG2},
 };
 
 static status_t GetVideoCodingTypeFromMime(
@@ -2450,9 +2546,56 @@ status_t ACodec::setupVideoEncoder(const char *mime, const sp<AMessage> &msg) {
         sliceHeight = height;
     }
 
+
+	/* modify by fangning
+	   input size of the picture can be different as the output of the picture
+	   our HW video encoder has scaler modules;
+	*/
+
+	int32_t srcWidth = 0, srcHeight = 0;
+
+    msg->findInt32("src-width", &srcWidth);
+	msg->findInt32("src-height", &srcHeight);	
+	
+	if(srcWidth != 0 && srcHeight != 0)
+	{
+	    video_def->nFrameWidth = srcWidth;
+    	video_def->nFrameHeight = srcHeight;
+    	video_def->nStride = srcWidth;
+	}
+
     video_def->nSliceHeight = sliceHeight;
 
-    def.nBufferSize = (video_def->nStride * video_def->nSliceHeight * 3) / 2;
+
+	/* modify by fangning begin */
+	
+	int32_t bufferNum = 0;
+
+	// config input buffer numbers
+	msg->findInt32("input-buffer-numbers", &bufferNum);
+
+	if(bufferNum != 0)
+	{
+		 def.nBufferCountActual = (uint32_t)bufferNum;
+		 ALOGD("Encoder, def.nBufferCountActual: %d", def.nBufferCountActual);
+	}
+
+	int32_t bufferSize = 0;
+
+	// get input buffer size
+	msg->findInt32("input-buffer-size", &bufferSize);
+
+	if(bufferSize != 0)
+	{
+		 def.nBufferSize = (uint32_t)bufferSize;
+		 ALOGD("Encoder, def.nBufferSize: %d", def.nBufferSize);
+	}
+	else
+	{
+		 def.nBufferSize = (video_def->nStride * video_def->nSliceHeight * 3) / 2;
+	}
+
+	/* modify by fangning end */
 
     float frameRate;
     if (!msg->findFloat("frame-rate", &frameRate)) {
@@ -3982,7 +4125,8 @@ status_t ACodec::pushBlankBuffersToNativeWindow() {
             goto error;
         }
 
-        *img = 0;
+		if(img != NULL)
+        	*img = 0;
 
         err = buf->unlock();
         if (err != NO_ERROR) {
@@ -5058,6 +5202,10 @@ bool ACodec::LoadedState::onConfigureComponent(
         return false;
     }
 
+    int isdrm = 0;
+    if(msg->findInt32("isdrm", &isdrm) && isdrm) {
+        mCodec->mFlags |= kFlagIsDRM;
+    }
     {
         sp<AMessage> notify = mCodec->mNotify->dup();
         notify->setInt32("what", CodecBase::kWhatComponentConfigured);
